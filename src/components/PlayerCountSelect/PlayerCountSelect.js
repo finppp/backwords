@@ -61,7 +61,3 @@ const Row = styled.div`
   display: flex;
   justify-content: center;
 `;
-
-const Heading = styled.h2`
-  color: white;
-`;

@@ -78,8 +78,3 @@ const Container = styled.section`
   background-color: ${props => colours[props.colour || 'green'].light};
         height: 100vh;
       `;
-
-const Title = styled.h1`
-  color: ${props => colours[props.colour || 'white'].dark};
-        transition: color 0.5s ease;
-`;

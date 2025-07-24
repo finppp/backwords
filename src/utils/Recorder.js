@@ -37,7 +37,6 @@ export class Recorder {
     source.connect(this.node);
     this.node.connect(this.context.destination);    //this should not be necessary
 
-    let self = {};
     const workerBlob = new Blob([`
       let recLength = 0,
           recBuffers = [],
