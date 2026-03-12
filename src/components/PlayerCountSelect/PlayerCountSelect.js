@@ -29,6 +29,16 @@ const PlayerCountSelect = ({ numberOfPlayers, changePlayerCount }) => {
           shade={numberOfPlayers === 4 ? 'light' : 'dark'}
           onClick={() => changePlayerCount(4)} buttonText='5' />
       </Row>
+      <Row>
+        <Button
+          colour={baseColour}
+          shade={numberOfPlayers === 5 ? 'light' : 'dark'}
+          onClick={() => changePlayerCount(5)} buttonText='6' />
+        <Button
+          colour={baseColour}
+          shade={numberOfPlayers === 6 ? 'light' : 'dark'}
+          onClick={() => changePlayerCount(6)} buttonText='7' />
+      </Row>
     </Container>
   )
 }
