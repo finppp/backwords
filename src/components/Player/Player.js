@@ -1,70 +1,56 @@
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import Button from '../Button/Button'
 import styled from 'styled-components';
 import colours from '../../utils/colours'
 import Guide from '../Guide/Guide'
 
-export class Player extends Component {
+const colourArray = ['green', 'orange', 'red', 'yellow', 'blue', 'pink']
 
-  constructor(props) {
-    super(props)
+const Player = ({ onAdvance, startRecording, stopRecording, playRecording, guideEnabled, currentPlayer }) => {
+  const [isRecording, setIsRecording] = useState(false)
 
-    this.state = {
-      isRecording: false
-    }
+  useEffect(() => {
+    setIsRecording(false)
+  }, [currentPlayer])
+
+  const handleStartRecording = () => {
+    startRecording()
+    setIsRecording(true)
   }
 
-  startRecording() {
-    this.props.startRecording()
-    this.setState({
-      isRecording: true
-    })
+  const handleFinishRecording = () => {
+    stopRecording()
+    onAdvance()
   }
 
-  finishRecording() {
-    this.props.stopRecording()
-    this.props.onAdvance()
-  }
+  const colour = colourArray[currentPlayer - 1]
 
-  componentDidUpdate(prevProps) {
-    if (this.props.currentPlayer !== prevProps.currentPlayer) {
-      this.setState({
-        isRecording: false
-      })
-    }
-  }
+  return (
+    <Container colour={colour}>
+      <Guide
+        shade='medium' colour={colour}
+        guideText={`Player ${currentPlayer + 1 || 'x'}`} />
 
-  render() {
-    let colourArray = ['green', 'orange', 'red', 'yellow', 'blue', 'pink']
-    return (
-      <Container colour={colourArray[this.props.currentPlayer - 1]}>
-        <Guide
-          shade='medium' colour={colourArray[this.props.currentPlayer - 1]}
-          guideText={`Player ${this.props.currentPlayer + 1 || 'x'}`} />
+      <Guide
+        guideOnly
+        guideEnabled={guideEnabled}
+        shade='medium' colour={colour}
+        guideText={
+          ["Each player listens to a reversed version of the Leaders recording - as many times as they like ", "(Play button)"]} />
 
-        <Guide
-          guideOnly
-          guideEnabled={this.props.guideEnabled}
-          shade='medium' colour={colourArray[this.props.currentPlayer - 1]}
-          guideText={
-            ["Each player listens to a reversed version of the Leaders recording - as many times as they like ", "(Play button)"]} />
+      <Guide
+        guideOnly
+        guideEnabled={guideEnabled}
+        shade='medium' colour={colour}
+        guideText={['They then have to record their best imitation of the sound', '(Record button)']} />
 
-        <Guide
-          guideOnly
-          guideEnabled={this.props.guideEnabled}
-          shade='medium' colour={colourArray[this.props.currentPlayer - 1]}
-          guideText={['They then have to record their best imitation of the sound', '(Record button)']} />
-
-        <Button colour={colourArray[this.props.currentPlayer - 1]} onClick={() => this.props.playRecording()} buttonText='Play' />
-        {!this.state.isRecording &&
-
-          <Button colour={colourArray[this.props.currentPlayer - 1]} onClick={() => this.startRecording()} buttonText='Record' />}
-        {this.state.isRecording &&
-
-          <Button colour={colourArray[this.props.currentPlayer - 1]} onClick={() => this.finishRecording()} buttonText='Done' />}
-      </Container>
-    )
-  }
+      <Button colour={colour} onClick={playRecording} buttonText='Play' />
+      {!isRecording &&
+        <Button colour={colour} onClick={handleStartRecording} buttonText='Record' />}
+      {isRecording &&
+        <Button colour={colour} onClick={handleFinishRecording} buttonText='Done' />}
+    </Container>
+  )
 }
 
 export default Player
