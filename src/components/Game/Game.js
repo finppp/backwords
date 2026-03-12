@@ -1,128 +1,80 @@
-import React, { Component } from 'react'
+import React, { useState, useCallback } from 'react'
 import styles from './Game.module.scss'
 import Start from '../Start/Start'
 import PhraseRecord from '../PhraseRecord/PhraseRecord'
 import Player from '../Player/Player'
 import Playback from '../Playback/Playback'
-import MediaPlayer from '../MediaPlayer/MediaPlayer'
+import useMediaPlayer from '../MediaPlayer/MediaPlayer'
 
-export class Game extends Component {
-  constructor(props) {
-    super(props)
+const Game = () => {
+  const [currentState, setCurrentState] = useState('start')
+  const [currentPlayer, setCurrentPlayer] = useState(1)
+  const [numberOfPlayers, setNumberOfPlayers] = useState(3)
+  const [guideEnabled, setGuideEnabled] = useState(true)
 
-    this.state = {
-      currentState: 'start',
-      currentPlayer: 1,
-      numberOfPlayers: 3,
-      guideEnabled: true,
-    }
-  }
+  const { reset, startRecording, stopRecording, playRecording } = useMediaPlayer()
 
-  resetGame() {
-    this.child.reset()
-    this.setState({
-      currentState: 'start',
-      currentPlayer: 1
-    })
-  }
+  const resetGame = useCallback(() => {
+    reset()
+    setCurrentState('start')
+    setCurrentPlayer(1)
+  }, [reset])
 
-  toggleGuide(newState) {
-    this.setState({
-      guideEnabled: newState
-    })
-  }
-
-  changeGameState() {
-    let nextState = ''
-    switch (this.state.currentState) {
+  const changeGameState = useCallback(() => {
+    switch (currentState) {
       case 'start':
-        nextState = 'record'
-        break;
+        setCurrentState('record')
+        break
       case 'record':
-        nextState = 'player'
-        break;
+        setCurrentState('player')
+        break
       case 'player':
-        this.checkIfAnotherPlayer()
-        return
+        if (currentPlayer === numberOfPlayers) {
+          setCurrentState('playback')
+        } else {
+          setCurrentPlayer(prev => prev + 1)
+        }
+        break
       default:
-        console.log('Error state does not match switch');
-        break;
+        console.log('Error state does not match switch')
+        break
     }
+  }, [currentState, currentPlayer, numberOfPlayers])
 
-    this.setState({
-      currentState: nextState,
-    })
-  }
+  return (
+    <section className={styles.container}>
+      {currentState === 'start' &&
+        <Start
+          guideEnabled={guideEnabled}
+          toggleGuide={setGuideEnabled}
+          numberOfPlayers={numberOfPlayers}
+          changePlayerCount={setNumberOfPlayers}
+          onAdvance={changeGameState} />}
 
-  checkIfAnotherPlayer() {
-    if (this.state.currentPlayer === this.state.numberOfPlayers) {
-      this.setState({
-        currentState: 'playback'
-      })
-    } else {
-      this.setState({
-        currentPlayer: this.state.currentPlayer + 1
-      })
-    }
-  }
+      {currentState === 'record' &&
+        <PhraseRecord
+          startRecording={startRecording}
+          stopRecording={() => stopRecording('gameAudio')}
+          guideEnabled={guideEnabled}
+          onAdvance={changeGameState} />}
 
-  startRecording() {
-    this.child.startRecording()
-  }
+      {currentState === 'player' &&
+        <Player
+          onAdvance={changeGameState}
+          startRecording={startRecording}
+          stopRecording={() => stopRecording('player')}
+          playRecording={() => playRecording('gameAudio', 'backwards')}
+          guideEnabled={guideEnabled}
+          currentPlayer={currentPlayer} />}
 
-  stopRecording(saveType) {
-    this.child.stopRecording(saveType)
-  }
-
-  playRecording(audioToPlay, direction) {
-    this.child.playRecording(audioToPlay, direction)
-  }
-
-  changePlayerCount(newPlayerCount) {
-    this.setState({
-      numberOfPlayers: newPlayerCount
-    })
-  }
-
-
-  render() {
-    return (
-      <section className={styles.container}>
-        {/* <h1>Backchat</h1> */}
-        <MediaPlayer ref={instance => { this.child = instance; }} currentState={this.state.currentState} />
-        {this.state.currentState === 'start' &&
-          <Start
-            guideEnabled={this.state.guideEnabled}
-            toggleGuide={(newState) => this.toggleGuide(newState)}
-            numberOfPlayers={this.state.numberOfPlayers}
-            changePlayerCount={(newPlayerCount) => this.changePlayerCount(newPlayerCount)}
-            onAdvance={() => this.changeGameState()} />}
-
-        {this.state.currentState === 'record' &&
-          <PhraseRecord
-            startRecording={() => this.startRecording()}
-            stopRecording={() => this.stopRecording('gameAudio')}
-            guideEnabled={this.state.guideEnabled}
-            onAdvance={() => this.changeGameState()} />}
-
-        {this.state.currentState === 'player' &&
-          <Player
-            onAdvance={() => this.changeGameState()}
-            startRecording={() => this.startRecording()}
-            stopRecording={() => this.stopRecording('player')}
-            playRecording={() => this.playRecording('gameAudio', 'backwards')}
-            guideEnabled={this.state.guideEnabled}
-            currentPlayer={this.state.currentPlayer} />}
-
-        {this.state.currentState === 'playback' &&
-          <Playback
-            onAdvance={() => this.resetGame()}
-            playRecording={(player, direction) => this.playRecording(player, direction)}
-            guideEnabled={this.state.guideEnabled}
-            numberOfPlayers={this.state.numberOfPlayers} />}
-      </section>
-    )
-  }
+      {currentState === 'playback' &&
+        <Playback
+          onAdvance={resetGame}
+          playRecording={playRecording}
+          guideEnabled={guideEnabled}
+          numberOfPlayers={numberOfPlayers} />}
+    </section>
+  )
 }
 
 export default Game

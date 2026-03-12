@@ -1,28 +1,25 @@
-import React, { Component } from 'react'
+import React from 'react'
 import Button from '../Button/Button'
 import styled from 'styled-components';
 import colours from '../../utils/colours'
 import PlayerCountSelect from '../PlayerCountSelect/PlayerCountSelect'
 import Guide from '../Guide/Guide'
 
-export class Start extends Component {
-
-  render() {
-    return (
-      <Container>
-        <PlayerCountSelect
-          numberOfPlayers={this.props.numberOfPlayers}
-          changePlayerCount={(newPlayerCount) => this.props.changePlayerCount(newPlayerCount)} />
-        <Guide colour='blue' shade='medium' guideText='Guide enabled?' />
-        <Row>
-          <Button colour='blue' buttonText='Off' shade={this.props.guideEnabled ? 'dark' : 'light'} onClick={() => this.props.toggleGuide(false)} />
-          <Button colour='blue' buttonText='On' shade={this.props.guideEnabled ? 'light' : 'dark'} onClick={() => this.props.toggleGuide(true)} />
-        </Row>
-        <Guide colour='blue' shade='medium' guideText='Begin' />
-        <Button colour='blue' shade='dark' activeShade='light' onClick={() => this.props.onAdvance('record')} buttonText='GO!' />
-      </Container>
-    )
-  }
+const Start = ({ guideEnabled, toggleGuide, numberOfPlayers, changePlayerCount, onAdvance }) => {
+  return (
+    <Container>
+      <PlayerCountSelect
+        numberOfPlayers={numberOfPlayers}
+        changePlayerCount={changePlayerCount} />
+      <Guide colour='blue' shade='medium' guideText='Guide enabled?' />
+      <Row>
+        <Button colour='blue' buttonText='Off' shade={guideEnabled ? 'dark' : 'light'} onClick={() => toggleGuide(false)} />
+        <Button colour='blue' buttonText='On' shade={guideEnabled ? 'light' : 'dark'} onClick={() => toggleGuide(true)} />
+      </Row>
+      <Guide colour='blue' shade='medium' guideText='Begin' />
+      <Button colour='blue' shade='dark' activeShade='light' onClick={() => onAdvance('record')} buttonText='GO!' />
+    </Container>
+  )
 }
 
 export default Start

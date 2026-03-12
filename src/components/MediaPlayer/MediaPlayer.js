@@ -1,114 +1,103 @@
-import { Component } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import Recorder from '../../utils/Recorder'
 
+const useMediaPlayer = () => {
+  const audioContextRef = useRef(null)
+  const recorderRef = useRef(null)
+  const [audioState, setAudioState] = useState({
+    gameAudio: [],
+    gameAudioReversed: [],
+    playersAudio: [],
+    playersAudioReversed: []
+  })
+  const audioStateRef = useRef(audioState)
+  audioStateRef.current = audioState
 
-export class MediaPlayer extends Component {
+  useEffect(() => {
+    audioContextRef.current = new AudioContext()
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      gameAudio: [],
-      gameAudioReversed: [],
-      playersAudio: [],
-      playersAudioReversed: []
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(
+      (stream) => {
+        const microphone = audioContextRef.current.createMediaStreamSource(stream)
+        const filter = audioContextRef.current.createBiquadFilter()
+        recorderRef.current = new Recorder(microphone)
+        microphone.connect(filter)
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+
+    return () => {
+      audioContextRef.current.close()
     }
-  }
+  }, [])
 
-
-  reset() {
-    this.setState({
+  const reset = useCallback(() => {
+    setAudioState({
       gameAudio: [],
       gameAudioReversed: [],
       playersAudio: [],
       playersAudioReversed: []
     })
-  }
+  }, [])
 
-  async componentDidMount() {
-    this.audioContext = new AudioContext();
-    this.getMicrophoneAccess();
-  }
-  
-  componentWillUnmount() {
-    this.audioContext.close();
-  }
-  
-  setupRecorder(inputNode) {
-    this.recorder = new Recorder(inputNode)
-  }
-  
-  async startRecording() {
-    await this.audioContext.resume();
-    this.recorder.clear()
-    this.recorder.record()
-  }
+  const startRecording = useCallback(async () => {
+    await audioContextRef.current.resume()
+    recorderRef.current.clear()
+    recorderRef.current.record()
+  }, [])
 
-  stopRecording(audioType) {
-    this.recorder.stop()
-    this.recorder.getBuffer((buffer) => this.saveBuffer(buffer, audioType))
-  }
+  const stopRecording = useCallback((audioType) => {
+    recorderRef.current.stop()
+    recorderRef.current.getBuffer((buffer) => {
+      const left = buffer[0].slice(0).reverse()
+      const right = buffer[1].slice(0).reverse()
+      const reversedBuffer = [left, right]
 
-  playRecording(audioToPlay, direction) {
+      if (audioType === 'gameAudio') {
+        setAudioState(prev => ({
+          ...prev,
+          gameAudio: buffer,
+          gameAudioReversed: reversedBuffer
+        }))
+      } else if (audioType === 'player') {
+        setAudioState(prev => ({
+          ...prev,
+          playersAudio: [...prev.playersAudio, buffer],
+          playersAudioReversed: [...prev.playersAudioReversed, reversedBuffer]
+        }))
+      }
+    })
+  }, [])
+
+  const playBuffer = useCallback((buffers) => {
+    const newSource = audioContextRef.current.createBufferSource()
+    const newBuffer = audioContextRef.current.createBuffer(2, buffers[0].length, audioContextRef.current.sampleRate)
+    newBuffer.getChannelData(0).set(buffers[0])
+    newBuffer.getChannelData(1).set(buffers[1])
+    newSource.buffer = newBuffer
+    newSource.connect(audioContextRef.current.destination)
+    newSource.start(0)
+  }, [])
+
+  const playRecording = useCallback((audioToPlay, direction) => {
+    const state = audioStateRef.current
     if (audioToPlay === 'gameAudio') {
       if (direction === 'forwards') {
-        this.playBuffer(this.state.gameAudio)
+        playBuffer(state.gameAudio)
       } else {
-        this.playBuffer(this.state.gameAudioReversed)
+        playBuffer(state.gameAudioReversed)
       }
     } else {
       if (direction === 'forwards') {
-        this.playBuffer(this.state.playersAudio[audioToPlay - 1])
+        playBuffer(state.playersAudio[audioToPlay - 1])
       } else {
-        this.playBuffer(this.state.playersAudioReversed[audioToPlay - 1])
+        playBuffer(state.playersAudioReversed[audioToPlay - 1])
       }
     }
-  }
+  }, [playBuffer])
 
-  playBuffer(buffers) {
-    var newSource = this.audioContext.createBufferSource();
-    var newBuffer = this.audioContext.createBuffer(2, buffers[0].length, this.audioContext.sampleRate);
-    newBuffer.getChannelData(0).set(buffers[0]);
-    newBuffer.getChannelData(1).set(buffers[1]);
-    newSource.buffer = newBuffer;
-
-    newSource.connect(this.audioContext.destination);
-    newSource.start(0);
-  }
-
-  saveBuffer(buffer, audioType) {
-    let left = buffer[0].slice(0).reverse()
-    let right = buffer[1].slice(0).reverse()
-    let reversedBuffer = [left, right]
-
-    if (audioType === 'gameAudio') {
-      this.setState({
-        gameAudio: buffer,
-        gameAudioReversed: reversedBuffer
-      })
-    } else if (audioType === 'player') {
-      this.setState({
-        playersAudio: [...this.state.playersAudio, buffer],
-        playersAudioReversed: [...this.state.playersAudioReversed, reversedBuffer]
-      })
-    }
-  }
-
-  getMicrophoneAccess() {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(
-      (stream) => {
-        const microphone = this.audioContext.createMediaStreamSource(stream);
-        const filter = this.audioContext.createBiquadFilter();
-        this.setupRecorder(microphone)
-        microphone.connect(filter);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-
-  render() {
-    return null;
-  }
+  return { reset, startRecording, stopRecording, playRecording }
 }
 
-export default MediaPlayer
+export default useMediaPlayer
