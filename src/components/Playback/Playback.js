@@ -30,7 +30,7 @@ const Playback = ({ onAdvance, playRecording, guideEnabled, numberOfPlayers }) =
   )
 
   return (
-    <Container colour={colour}>
+    <Container $colour={colour}>
       {playbackButtons}
       <Button colour={colour} onClick={onAdvance} buttonText='Finish' />
     </Container>
@@ -44,7 +44,7 @@ const Container = styled.section`
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background-color: ${props => colours[props.colour || 'red'].light};
+  background-color: ${props => colours[props.$colour || 'red'].light};
   height: 100vh;
 `;
 
