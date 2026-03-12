@@ -15,7 +15,7 @@ const Guide = ({ guideOnly, guideEnabled, guideText, colour, shade }) => {
   }
 
   return (
-    <Container colour={colour} shade={shade}>
+    <Container $colour={colour} $shade={shade}>
       {content}
     </Container>
   )
@@ -37,7 +37,7 @@ const Container = styled.section`
   h3 {
     font-size: 16px;
     padding: 0 20px 20px 20px;
-    color: ${props => colours[props.colour || 'red'][props.shade || 'light']};
+    color: ${props => colours[props.$colour || 'red'][props.$shade || 'light']};
     text-align: center;
     &:first-child {
       padding-top: 20px;

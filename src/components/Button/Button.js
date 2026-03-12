@@ -5,11 +5,11 @@ import colours from '../../utils/colours';
 const Button = ({ darkText, colour, activeColour, shade, activeShade, onClick, buttonText }) => {
   return (
     <Container
-      darkText={darkText}
-      colour={colour}
-      activeColour={activeColour}
-      shade={shade}
-      activeShade={activeShade}
+      $darkText={darkText}
+      $colour={colour}
+      $activeColour={activeColour}
+      $shade={shade}
+      $activeShade={activeShade}
     >
       <button onClick={onClick}>{buttonText}</button>
     </Container>
@@ -18,9 +18,9 @@ const Button = ({ darkText, colour, activeColour, shade, activeShade, onClick, b
 
 export default Button;
 
-const Container = styled.div.attrs(({ colour = 'red', shade = 'medium' }) => ({
+const Container = styled.div.attrs(({ $colour = 'red', $shade = 'medium' }) => ({
   style: {
-    backgroundColor: colours[colour][shade],
+    backgroundColor: colours[$colour][$shade],
   },
 }))`
   margin: 5px;
@@ -31,8 +31,8 @@ const Container = styled.div.attrs(({ colour = 'red', shade = 'medium' }) => ({
 
   &:active {
     transition: none;
-    background-color: ${({ activeColour, colour = 'red', activeShade, shade = 'medium' }) =>
-      colours[activeColour || colour][activeShade || 'dark']};
+    background-color: ${({ $activeColour, $colour = 'red', $activeShade }) =>
+      colours[$activeColour || $colour][$activeShade || 'dark']};
   }
 
   button {
@@ -40,7 +40,7 @@ const Container = styled.div.attrs(({ colour = 'red', shade = 'medium' }) => ({
     height: 100%;
     font-size: 1.4em;
     font-weight: 500;
-    color: ${({ darkText }) => (darkText ? 'black' : 'white')};
+    color: ${({ $darkText }) => ($darkText ? 'black' : 'white')};
     outline: none !important;
     user-select: none;
     -webkit-tap-highlight-color: transparent;

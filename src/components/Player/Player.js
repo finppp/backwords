@@ -26,7 +26,7 @@ const Player = ({ onAdvance, startRecording, stopRecording, playRecording, guide
   const colour = colourArray[currentPlayer - 1]
 
   return (
-    <Container colour={colour}>
+    <Container $colour={colour}>
       <Guide
         shade='medium' colour={colour}
         guideText={`Player ${currentPlayer + 1 || 'x'}`} />
@@ -61,6 +61,6 @@ const Container = styled.section`
       justify-content: center;
       flex-direction: column;
       transition: background-color 0.5s ease;
-  background-color: ${props => colours[props.colour || 'green'].light};
+  background-color: ${props => colours[props.$colour || 'green'].light};
         height: 100vh;
       `;
