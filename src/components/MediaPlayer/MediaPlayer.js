@@ -1,9 +1,10 @@
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useRef, useCallback, useState } from 'react'
 import Recorder from '../../utils/Recorder'
 
 const useMediaPlayer = () => {
   const audioContextRef = useRef(null)
   const recorderRef = useRef(null)
+  const initPromiseRef = useRef(null)
   const [audioState, setAudioState] = useState({
     gameAudio: [],
     gameAudioReversed: [],
@@ -13,24 +14,30 @@ const useMediaPlayer = () => {
   const audioStateRef = useRef(audioState)
   audioStateRef.current = audioState
 
-  useEffect(() => {
-    audioContextRef.current = new AudioContext()
-
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(
-      (stream) => {
-        const microphone = audioContextRef.current.createMediaStreamSource(stream)
-        const filter = audioContextRef.current.createBiquadFilter()
-        recorderRef.current = new Recorder(microphone)
-        microphone.connect(filter)
-      })
-      .catch((err) => {
-        console.log(err)
-      })
-
-    return () => {
-      audioContextRef.current.close()
+  const ensureAudioContext = useCallback(async () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
     }
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume()
+    }
+    return audioContextRef.current
   }, [])
+
+  const initMicrophone = useCallback(async () => {
+    if (initPromiseRef.current) return initPromiseRef.current
+
+    initPromiseRef.current = (async () => {
+      const ctx = await ensureAudioContext()
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const microphone = ctx.createMediaStreamSource(stream)
+      const filter = ctx.createBiquadFilter()
+      recorderRef.current = new Recorder(microphone)
+      microphone.connect(filter)
+    })()
+
+    return initPromiseRef.current
+  }, [ensureAudioContext])
 
   const reset = useCallback(() => {
     setAudioState({
@@ -42,10 +49,11 @@ const useMediaPlayer = () => {
   }, [])
 
   const startRecording = useCallback(async () => {
-    await audioContextRef.current.resume()
+    await initMicrophone()
+    await ensureAudioContext()
     recorderRef.current.clear()
     recorderRef.current.record()
-  }, [])
+  }, [initMicrophone, ensureAudioContext])
 
   const stopRecording = useCallback((audioType) => {
     recorderRef.current.stop()
@@ -70,29 +78,30 @@ const useMediaPlayer = () => {
     })
   }, [])
 
-  const playBuffer = useCallback((buffers) => {
-    const newSource = audioContextRef.current.createBufferSource()
-    const newBuffer = audioContextRef.current.createBuffer(2, buffers[0].length, audioContextRef.current.sampleRate)
+  const playBuffer = useCallback(async (buffers) => {
+    const ctx = await ensureAudioContext()
+    const newSource = ctx.createBufferSource()
+    const newBuffer = ctx.createBuffer(2, buffers[0].length, ctx.sampleRate)
     newBuffer.getChannelData(0).set(buffers[0])
     newBuffer.getChannelData(1).set(buffers[1])
     newSource.buffer = newBuffer
-    newSource.connect(audioContextRef.current.destination)
+    newSource.connect(ctx.destination)
     newSource.start(0)
-  }, [])
+  }, [ensureAudioContext])
 
-  const playRecording = useCallback((audioToPlay, direction) => {
+  const playRecording = useCallback(async (audioToPlay, direction) => {
     const state = audioStateRef.current
     if (audioToPlay === 'gameAudio') {
       if (direction === 'forwards') {
-        playBuffer(state.gameAudio)
+        await playBuffer(state.gameAudio)
       } else {
-        playBuffer(state.gameAudioReversed)
+        await playBuffer(state.gameAudioReversed)
       }
     } else {
       if (direction === 'forwards') {
-        playBuffer(state.playersAudio[audioToPlay - 1])
+        await playBuffer(state.playersAudio[audioToPlay - 1])
       } else {
-        playBuffer(state.playersAudioReversed[audioToPlay - 1])
+        await playBuffer(state.playersAudioReversed[audioToPlay - 1])
       }
     }
   }, [playBuffer])
