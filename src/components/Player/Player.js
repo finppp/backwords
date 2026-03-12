@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import colours from '../../utils/colours'
 import Guide from '../Guide/Guide'
 
-const colourArray = ['green', 'orange', 'red', 'yellow', 'blue', 'pink']
+const colourArray = ['green', 'orange', 'red', 'yellow', 'blue', 'pink', 'teal', 'darkOrange']
 
 const Player = ({ onAdvance, startRecording, stopRecording, playRecording, guideEnabled, currentPlayer }) => {
   const [isRecording, setIsRecording] = useState(false)
