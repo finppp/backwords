@@ -75,7 +75,27 @@ export class MediaPlayer extends Component {
     newSource.start(0);
   }
 
-  saveBuffer(buffer, audioType) {
+  normalizeBuffer(buffer) {
+    let peak = 0
+    for (let ch = 0; ch < buffer.length; ch++) {
+      for (let i = 0; i < buffer[ch].length; i++) {
+        const abs = Math.abs(buffer[ch][i])
+        if (abs > peak) peak = abs
+      }
+    }
+    if (peak === 0 || peak >= 0.9) return buffer
+    const gain = 0.9 / peak
+    return buffer.map(channel => {
+      const normalized = new Float32Array(channel.length)
+      for (let i = 0; i < channel.length; i++) {
+        normalized[i] = channel[i] * gain
+      }
+      return normalized
+    })
+  }
+
+  saveBuffer(rawBuffer, audioType) {
+    const buffer = this.normalizeBuffer(rawBuffer)
     let left = buffer[0].slice(0).reverse()
     let right = buffer[1].slice(0).reverse()
     let reversedBuffer = [left, right]
