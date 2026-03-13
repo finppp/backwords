@@ -3,10 +3,11 @@ import Button from '../Button/Button'
 import styled from 'styled-components';
 import colours from '../../utils/colours'
 import Guide from '../Guide/Guide'
+import Waveform from '../Waveform/Waveform'
 
 const colourArray = ['green', 'orange', 'red', 'yellow', 'blue', 'pink', 'teal', 'darkOrange']
 
-const Player = ({ onAdvance, startRecording, stopRecording, playRecording, guideEnabled, currentPlayer }) => {
+const Player = ({ onAdvance, startRecording, stopRecording, playRecording, guideEnabled, analyserRef, currentPlayer }) => {
   const [isRecording, setIsRecording] = useState(false)
 
   useEffect(() => {
@@ -44,11 +45,12 @@ const Player = ({ onAdvance, startRecording, stopRecording, playRecording, guide
         shade='medium' colour={colour}
         guideText={['They then have to record their best imitation of the sound', '(Record button)']} />
 
-      <Button colour={colour} onClick={playRecording} buttonText='Play' />
+      {!isRecording && <Button colour={colour} onClick={playRecording} buttonText='Play' />}
+      {isRecording && <Waveform analyserRef={analyserRef} isActive={isRecording} colour='white' bgColour={colours[colour].light} />}
       {!isRecording &&
         <Button colour={colour} onClick={handleStartRecording} buttonText='Record' />}
       {isRecording &&
-        <Button colour={colour} onClick={handleFinishRecording} buttonText='Done' />}
+        <Button colour={colour} onClick={handleFinishRecording} buttonText='Stop' flash />}
     </Container>
   )
 }

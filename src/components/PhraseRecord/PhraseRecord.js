@@ -3,8 +3,9 @@ import Button from '../Button/Button'
 import styled from 'styled-components';
 import colours from '../../utils/colours'
 import Guide from '../Guide/Guide'
+import Waveform from '../Waveform/Waveform'
 
-const PhraseRecord = ({ startRecording, stopRecording, guideEnabled, onAdvance }) => {
+const PhraseRecord = ({ startRecording, stopRecording, guideEnabled, analyserRef, onAdvance }) => {
   const [isRecording, setIsRecording] = useState(false)
 
   const handleStartRecording = () => {
@@ -21,8 +22,9 @@ const PhraseRecord = ({ startRecording, stopRecording, guideEnabled, onAdvance }
     <Container>
       <Guide colour='purple' guideOnly guideEnabled={guideEnabled} guideText='The "Leader" (player 1) records a word or phrase without the other players hearing' />
       <Guide colour='purple' guideText={isRecording ? "Click this again when you're done" : "Click Record and say a something"} />
+      <Waveform analyserRef={analyserRef} isActive={isRecording} colour='white' bgColour={colours.purple.light} />
       {!isRecording && <Button colour='purple' shade='medium' onClick={handleStartRecording} buttonText='Record' />}
-      {isRecording && <Button colour='purple' shade='dark' onClick={handleFinishRecording} buttonText='Done' />}
+      {isRecording && <Button colour='purple' shade='dark' onClick={handleFinishRecording} buttonText='Stop' flash />}
     </Container>
   )
 }
