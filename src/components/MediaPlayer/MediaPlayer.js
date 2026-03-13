@@ -64,9 +64,29 @@ const useMediaPlayer = () => {
     recorderRef.current.record()
   }, [initMicrophone, ensureAudioContext])
 
+  const normalizeBuffer = useCallback((buffer) => {
+    let peak = 0
+    for (let ch = 0; ch < buffer.length; ch++) {
+      for (let i = 0; i < buffer[ch].length; i++) {
+        const abs = Math.abs(buffer[ch][i])
+        if (abs > peak) peak = abs
+      }
+    }
+    if (peak === 0 || peak >= 0.9) return buffer
+    const gain = 0.9 / peak
+    return buffer.map(channel => {
+      const normalized = new Float32Array(channel.length)
+      for (let i = 0; i < channel.length; i++) {
+        normalized[i] = channel[i] * gain
+      }
+      return normalized
+    })
+  }, [])
+
   const stopRecording = useCallback((audioType) => {
     recorderRef.current.stop()
-    recorderRef.current.getBuffer((buffer) => {
+    recorderRef.current.getBuffer((rawBuffer) => {
+      const buffer = normalizeBuffer(rawBuffer)
       const left = buffer[0].slice(0).reverse()
       const right = buffer[1].slice(0).reverse()
       const reversedBuffer = [left, right]
@@ -85,7 +105,7 @@ const useMediaPlayer = () => {
         }))
       }
     })
-  }, [])
+  }, [normalizeBuffer])
 
   const playBuffer = useCallback(async (buffers) => {
     const ctx = await ensureAudioContext()
