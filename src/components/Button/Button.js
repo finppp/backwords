@@ -1,8 +1,8 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import colours from '../../utils/colours';
 
-const Button = ({ darkText, colour, activeColour, shade, activeShade, onClick, buttonText }) => {
+const Button = ({ darkText, colour, activeColour, shade, activeShade, onClick, buttonText, flash }) => {
   return (
     <Container
       $darkText={darkText}
@@ -11,12 +11,25 @@ const Button = ({ darkText, colour, activeColour, shade, activeShade, onClick, b
       $shade={shade}
       $activeShade={activeShade}
     >
-      <button onClick={onClick}>{buttonText}</button>
+      <button onClick={onClick}>
+        {flash
+          ? buttonText.split('').map((char, i) => (
+              <FlashLetter key={i} $colour={colour} $delay={i * 0.15}>
+                {char}
+              </FlashLetter>
+            ))
+          : buttonText}
+      </button>
     </Container>
   );
 };
 
 export default Button;
+
+const flashText = (lightColour) => keyframes`
+  0%, 100% { color: white; }
+  50% { color: ${lightColour}; }
+`;
 
 const Container = styled.div.attrs(({ $colour = 'red', $shade = 'medium' }) => ({
   style: {
@@ -45,4 +58,10 @@ const Container = styled.div.attrs(({ $colour = 'red', $shade = 'medium' }) => (
     user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
+`;
+
+const FlashLetter = styled.span`
+  display: inline-block;
+  animation: ${({ $colour = 'red' }) => flashText(colours[$colour].light)} 1.2s ease-in-out infinite;
+  animation-delay: ${({ $delay = 0 }) => $delay}s;
 `;

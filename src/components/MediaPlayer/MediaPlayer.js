@@ -24,6 +24,9 @@ const useMediaPlayer = () => {
     return audioContextRef.current
   }, [])
 
+  const analyserRef = useRef(null)
+  const analyserDataRef = useRef(null)
+
   const initMicrophone = useCallback(async () => {
     if (initPromiseRef.current) return initPromiseRef.current
 
@@ -34,6 +37,12 @@ const useMediaPlayer = () => {
       const filter = ctx.createBiquadFilter()
       recorderRef.current = new Recorder(microphone)
       microphone.connect(filter)
+
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 256
+      microphone.connect(analyser)
+      analyserRef.current = analyser
+      analyserDataRef.current = new Uint8Array(analyser.fftSize)
     })()
 
     return initPromiseRef.current
@@ -106,7 +115,7 @@ const useMediaPlayer = () => {
     }
   }, [playBuffer])
 
-  return { reset, startRecording, stopRecording, playRecording }
+  return { reset, startRecording, stopRecording, playRecording, analyserRef }
 }
 
 export default useMediaPlayer

@@ -12,7 +12,7 @@ const Game = () => {
   const [numberOfPlayers, setNumberOfPlayers] = useState(3)
   const [guideEnabled, setGuideEnabled] = useState(true)
 
-  const { reset, startRecording, stopRecording, playRecording } = useMediaPlayer()
+  const { reset, startRecording, stopRecording, playRecording, analyserRef } = useMediaPlayer()
 
   const resetGame = useCallback(() => {
     reset()
@@ -56,6 +56,7 @@ const Game = () => {
           startRecording={startRecording}
           stopRecording={() => stopRecording('gameAudio')}
           guideEnabled={guideEnabled}
+          analyserRef={analyserRef}
           onAdvance={changeGameState} />}
 
       {currentState === 'player' &&
@@ -65,6 +66,7 @@ const Game = () => {
           stopRecording={() => stopRecording('player')}
           playRecording={() => playRecording('gameAudio', 'backwards')}
           guideEnabled={guideEnabled}
+          analyserRef={analyserRef}
           currentPlayer={currentPlayer} />}
 
       {currentState === 'playback' &&
